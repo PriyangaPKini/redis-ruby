@@ -1,6 +1,6 @@
 require "socket"
 
-class YourRedisServer
+class RedisServer
   def initialize(port)
     @port = port
   end
@@ -12,7 +12,9 @@ class YourRedisServer
     # Uncomment this block to pass the first stage
     server = TCPServer.new(@port)
     client = server.accept
+    client.puts('+PONG\r\n')
+    puts("djbjdb")
   end
 end
 
-YourRedisServer.new(6379).start
+RedisServer.new(6379).start
