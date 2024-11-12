@@ -12,7 +12,7 @@ class RedisServer
     # Uncomment this block to pass the first stage
     server = TCPServer.new(@port)
     client = server.accept
-    client.puts("+PONG\r\n\n")
+    client.puts("+PONG\r\n")
   end
 end
 
