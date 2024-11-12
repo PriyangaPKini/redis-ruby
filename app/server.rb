@@ -16,5 +16,5 @@ class RedisServer
   end
 end
 
-client = RedisClient.new(6379).start
+client = RedisClient.new(6379)
 client.execute(ARGV)
