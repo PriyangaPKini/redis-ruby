@@ -8,14 +8,43 @@ class RedisClient
     @client = RedisServer.new(port).start
   end
 
-  def execute(*args)
-    puts("here")
+  def parse_commands(client)
+    command = []
+    first_line = client.gets&.strip
+    if first_line && first_line.start_with?('*')
+      num_elements = first_line[1..].to_i
 
-    args.each do |arg|
-      puts(arg)
-      @client.puts("PONG\r\n")
-      response = @client.gets
-      puts("Messages from client #{response}")
+      num_elements.times do
+        length_line = client.gets&.strip
+        if length_line && length_line.start_with?('$')
+          str_length = length_line[1..].to_i
+          element = client.read(str_length)&.strip
+          client.gets
+          command << element.upcase
+        else
+          client.puts "-ERR protocol error"
+          return nil
+        end
+      end
+      return command
+    else
+      client.puts "-ERR unknown command format"
+      return nil
+    end
+  end
+
+  def execute
+    loop do
+      queries = parse_commands(@client)
+      case queries
+      when %w[COMMAND DOCS]
+        @client.puts "+OK\r\n"
+      when ["PING"]
+        @client.puts("+PONG\r\n")
+      else
+        puts("Error in your query  #{ queries }")
+        @client.puts("-ERR unknown command #{ queries }\r\n")
+      end
     end
   end
 end
