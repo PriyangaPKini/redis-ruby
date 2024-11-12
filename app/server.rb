@@ -1,4 +1,5 @@
 require "socket"
+require_relative "client"
 
 class RedisServer
   def initialize(port)
@@ -11,9 +12,9 @@ class RedisServer
 
     # Uncomment this block to pass the first stage
     server = TCPServer.new(@port)
-    client = server.accept
-    client.puts("+PONG\r\n")
+    server.accept
   end
 end
 
-RedisServer.new(6379).start
+client = RedisClient.new(6379).start
+client.execute(ARGV)
