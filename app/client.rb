@@ -8,7 +8,7 @@ class RedisClient
 
   def execute(*args)
     args.each do |arg|
-      puts "PONG\r\n"
+      client.puts "PONG\r\n"
     end
   end
 end
