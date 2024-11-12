@@ -17,7 +17,7 @@ class RedisServer
     end
   end
 
-  def execute(*args)
+  def execute(client, *args)
     puts("here")
 
     args.each do |arg|
