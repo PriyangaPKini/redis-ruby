@@ -7,7 +7,7 @@ class RedisClient
   end
 
   def execute(*args)
-    # puts(args)
+    puts(args)
     puts "PONG\r\n"
   end
 end
