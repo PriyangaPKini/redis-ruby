@@ -30,5 +30,5 @@ class RedisServer
 end
 
 
-RedisServer.new(6279).start
+RedisServer.new(6379).start
 

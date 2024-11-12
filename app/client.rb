@@ -7,8 +7,13 @@ class RedisClient
   end
 
   def execute(*args)
+    puts("here")
+
     args.each do |arg|
-      client.puts "PONG\r\n"
+      puts(arg)
+      @client.puts("PONG\r\n")
+      response = @client.gets
+      puts("Messages from client #{response}")
     end
   end
 end
