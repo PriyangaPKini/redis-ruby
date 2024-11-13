@@ -1,22 +1,62 @@
 require "socket"
-require_relative "client"
 
-class RedisServer
+module Redis
+  class RedisServer
 
-  attr_reader :port
-  def initialize(port)
-    @port = port
-  end
+    attr_reader :port
 
-  def start
-    # Uncomment this block to pass the first stage
-    server = TCPServer.new("127.0.0.1", port)
-    client = server.accept
-    puts "Redis server running on port #{port}..."
-    client
+    def initialize(port)
+      @port = port
+    end
+
+    def start
+      server = TCPServer.new("127.0.0.1", port)
+      puts "Redis server running on port #{port}..."
+      client = server.accept
+      handle_client(client)
+    rescue => e
+      puts "Server encountered an error: #{e.message}"
+    end
+
+    def parse_query(client)
+      command = []
+      first_line = client.gets&.strip
+      if first_line && first_line.start_with?('*')
+        num_elements = first_line[1..].to_i
+
+        num_elements.times do
+          line = client.gets&.strip
+          if line && line.start_with?('$')
+            line_length = line[1..].to_i
+            element = client.read(line_length)&.strip
+            client.gets
+            command << element.upcase
+          else
+            client.puts "-ERR protocol error"
+            return nil
+          end
+        end
+        return command
+      else
+        client.puts "-ERR unknown command format"
+        return nil
+      end
+    end
+    def handle_client(client)
+      while queries = parse_query(client)
+        case queries
+        when %w[COMMAND DOCS]
+          client.puts "+OK\r\n"
+        when ["PING"]
+          client.puts("+PONG\r\n")
+        else
+          client.puts("-ERR unknown command #{ queries }\r\n")
+        end
+      end
+    end
   end
 end
 
 
-client = RedisClient.new(6379)
-client.execute
+server = Redis::RedisServer.new(6379)
+server.start
