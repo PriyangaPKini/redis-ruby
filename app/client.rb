@@ -2,11 +2,11 @@ require "socket"
 
 # frozen_string_literal: true
 module Redis
-  class RedisClient
+  class Client
 
     attr_reader :port
 
-    def initialize(port, *args)
+    def initialize(port)
       @port = port
     end
 
@@ -27,5 +27,5 @@ module Redis
   end
 end
 
-client = Redis::RedisClient.new(6380)
+client = Redis::Client.new(6380)
 client.execute

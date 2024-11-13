@@ -1,7 +1,7 @@
 require "socket"
 
 module Redis
-  class RedisServer
+  class Server
 
     attr_reader :port
 
@@ -23,7 +23,7 @@ module Redis
     end
 
     def parse_query(client)
-      command = []
+      query = []
       first_line = client.gets&.strip
       if first_line && first_line.start_with?('*')
         num_elements = first_line[1..].to_i
@@ -34,33 +34,46 @@ module Redis
             line_length = line[1..].to_i
             element = client.read(line_length)&.strip
             client.gets
-            command << element.upcase
+            query << element
           else
-            client.puts "-ERR protocol error"
+            client.puts "-ERR protocol error\r\n"
             return nil
           end
         end
-        return command
+        return query
       else
-        client.puts "-ERR unknown command format"
+        client.puts "-ERR unknown command format\r\n"
         return nil
       end
     end
+
+    def execute(client, queries)
+
+      case queries.first.upcase
+      when "COMMAND"
+        client.puts "+OK\r\n"
+      when "ECHO"
+        arg = queries[1]
+        if arg
+          client.puts "$#{arg.length}\r\n#{arg}\r\n"
+        else
+          client.puts "-ERR wrong number of arguments for 'echo' command\r\n"
+        end
+      when "PING"
+        client.puts("+PONG\r\n")
+      else
+        client.puts("-ERR unknown command\r\n")
+      end
+    end
+
     def handle_client(client)
       while queries = parse_query(client)
-        case queries
-        when %w[COMMAND DOCS]
-          client.puts "+OK\r\n"
-        when ["PING"]
-          client.puts("+PONG\r\n")
-        else
-          client.puts("-ERR unknown command #{ queries }\r\n")
-        end
+        execute(client, queries)
       end
     end
   end
 end
 
 
-server = Redis::RedisServer.new(6379)
+server = Redis::Server.new(6380)
 server.start
