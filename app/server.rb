@@ -75,5 +75,5 @@ module Redis
 end
 
 
-server = Redis::Server.new(6380)
+server = Redis::Server.new(6379)
 server.start
