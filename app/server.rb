@@ -12,8 +12,12 @@ module Redis
     def start
       server = TCPServer.new("127.0.0.1", port)
       puts "Redis server running on port #{port}..."
-      client = server.accept
-      handle_client(client)
+      loop do
+        client = server.accept
+        Thread.new(client) do |conn|
+          handle_client(conn)
+        end
+      end
     rescue => e
       puts "Server encountered an error: #{e.message}"
     end
