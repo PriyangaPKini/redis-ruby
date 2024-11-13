@@ -7,3 +7,8 @@ source "https://rubygems.org"
 
 # Helps with declaratively parsing binary data.
 gem "bindata", "~> 2.4"
+
+group :development do
+  gem 'rspec'
+  gem 'pry'
+end
