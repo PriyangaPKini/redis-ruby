@@ -4,11 +4,13 @@ require "socket"
 
 class RedisClient
 
+  attr_reader :client
+
   def initialize(port, *args)
     @client = RedisServer.new(port).start
   end
 
-  def parse_commands(client)
+  def parse_commands
     command = []
     first_line = client.gets&.strip
     if first_line && first_line.start_with?('*')
@@ -35,15 +37,15 @@ class RedisClient
 
   def execute
     loop do
-      queries = parse_commands(@client)
+      queries = parse_commands
       case queries
       when %w[COMMAND DOCS]
-        @client.puts "+OK\r\n"
+        client.puts "+OK\r\n"
       when ["PING"]
-        @client.puts("+PONG\r\n")
+        client.puts("+PONG\r\n")
       else
         puts("Error in your query  #{ queries }")
-        @client.puts("-ERR unknown command #{ queries }\r\n")
+        client.puts("-ERR unknown command #{ queries }\r\n")
       end
     end
   end

@@ -2,15 +2,17 @@ require "socket"
 require_relative "client"
 
 class RedisServer
+
+  attr_reader :port
   def initialize(port)
     @port = port
   end
 
   def start
     # Uncomment this block to pass the first stage
-    server = TCPServer.new("127.0.0.1", @port)
+    server = TCPServer.new("127.0.0.1", port)
     client = server.accept
-    puts "Redis server running on port #{@port}..."
+    puts "Redis server running on port #{port}..."
     client
   end
 end
