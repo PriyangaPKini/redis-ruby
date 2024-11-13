@@ -3,10 +3,11 @@ require "socket"
 module Redis
   class Server
 
-    attr_reader :port
+    attr_reader :port, :store
 
     def initialize(port)
       @port = port
+      @store = {}
     end
 
     def start
@@ -48,8 +49,24 @@ module Redis
     end
 
     def execute(client, queries)
-
       case queries.first.upcase
+      when "GET"
+        key = queries[1]
+        if store.key?(key)
+          value = store[key]
+          client.puts "$#{value.length}\r\n#{value}\r\n"
+        else
+          client.puts "$-1\r\n"
+        end
+      when "SET"
+        key, value = queries[1..]
+        if key.nil? or value.nil?
+          client.puts "-ERR wrong number of arguments for 'echo' command\r\n"
+        else
+          store[key] = value
+          client.puts "+OK\r\n"
+        end
+
       when "COMMAND"
         client.puts "+OK\r\n"
       when "ECHO"
