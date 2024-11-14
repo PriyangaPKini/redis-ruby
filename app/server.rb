@@ -72,7 +72,7 @@ module Redis
       when "SET"
         key, value = queries[1..]
         if key.nil? or value.nil?
-          client.puts "-ERR wrong number of arguments for 'echo' command\r\n"
+          client.puts "-ERR wrong number of arguments for 'set' command\r\n"
         else
           store[key] = value
           client.puts "+OK\r\n"
