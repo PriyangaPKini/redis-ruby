@@ -26,26 +26,37 @@ module Redis
     def parse_query(client)
       query = []
       first_line = client.gets&.strip
-      if first_line && first_line.start_with?('*')
-        num_elements = first_line[1..].to_i
-
-        num_elements.times do
-          line = client.gets&.strip
-          if line && line.start_with?('$')
-            line_length = line[1..].to_i
-            element = client.read(line_length)&.strip
-            client.gets
-            query << element
-          else
-            client.puts "-ERR protocol error\r\n"
-            return nil
-          end
-        end
-        return query
-      else
+      unless first_line&.start_with?('*')
         client.puts "-ERR unknown command format\r\n"
         return nil
       end
+
+      array_length = first_line[1..].to_i
+
+      array_length.times do
+        length_indicator = client.gets&.strip
+        puts(length_indicator)
+        unless length_indicator&.start_with?('$')
+          client.puts "-ERR protocol error\r\n"
+          return nil
+        end
+
+        element_length = length_indicator[1..].to_i
+        if element_length <= 0
+          client.puts "-ERR protocol error\r\n"
+          return nil
+        end
+
+        element = client.gets&.strip
+        if element.nil? || element.length != element_length
+          client.puts "-ERR unknown command format\r\n"
+          return nil
+        end
+
+        query << element
+      end
+
+      query
     end
 
     def execute(client, queries)
