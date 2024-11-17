@@ -26,5 +26,5 @@ module Redis
   end
 end
 
-client = Redis::Client.new(6380)
+client = Redis::Client.new(6379)
 client.execute
