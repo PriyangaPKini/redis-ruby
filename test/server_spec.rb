@@ -87,7 +87,7 @@ RSpec.describe Redis::Server do
     end
 
     it "gets the value to the given key using GET command" do
-      server.store["key"] = "value"
+      server.store["key"] = {"value": "value"}
       expect(client).to receive(:puts).with("$5\r\nvalue\r\n")
       server.execute(client, %w[GET key])
     end
@@ -95,6 +95,26 @@ RSpec.describe Redis::Server do
     it "returns (nil) when given key is not present in redis" do
       expect(client).to receive(:puts).with("$-1\r\n")
       server.execute(client, %w[GET non_existing_key])
+    end
+
+    it "sets a value to the given key and set an expiry using SET command" do
+      expect(client).to receive(:puts).with("+OK\r\n")
+      server.execute(client, %w[SET foo bar px 2000])
+    end
+
+    it "gets the value to the given key using GET command only if the key is not expired" do
+      server.store["key"] = {"value": "value", "expires_on": 2000}
+      expect(client).to receive(:puts).with("$5\r\nvalue\r\n")
+      server.execute(client, %w[GET key])
+    end
+
+    it "returns (nil) when the key has expired" do
+      milliseconds = 2000
+      seconds = milliseconds / 1000.0
+      server.store["key"] = {"value": "value", "expires_on": Time.now + seconds}
+      expect(client).to receive(:puts).with("$-1\r\n")
+      sleep(seconds + 2)
+      server.execute(client, %w[GET key])
     end
   end
 end

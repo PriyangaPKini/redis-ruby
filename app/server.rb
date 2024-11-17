@@ -63,16 +63,20 @@ module Redis
       when "GET"
         key = queries[1]
         if store.key?(key)
-          expires_on = store[key][:expires_on]
-          puts(store[key], expires_on, Time.now, expires_on.class)
-          unless Time.now <= expires_on
-            client.puts "$-1\r\n"
+          if store[key].key?(:expires_on)
+            expires_on = store[key][:expires_on]
+            puts(store[key], expires_on, Time.now, expires_on.class)
+            unless Time.now <= expires_on
+              client.puts "$-1\r\n"
+              return nil
+            end
           end
+
           value = store[key][:value]
           client.puts "$#{value.length}\r\n#{value}\r\n"
         else
           client.puts "$-1\r\n"
-          nil
+          return nil
         end
 
       when "SET"
@@ -82,11 +86,11 @@ module Redis
         end
 
         key, value = queries[1..2]
-        px, milli_seconds = queries[3..4]
-        unless px.upcase == "PX"
-          client.puts("-ERR unknown command\r\n")
+        px, milliseconds = queries[3..4]
+        store[key] = {value: value}
+        if px&.upcase == "PX"
+          store[key]["expires_on"] = Time.now + (milliseconds.to_i / 1000.0)
         end
-        store[key] = {value: value, expires_on: Time.now + (milli_seconds.to_i / 1000.0)}
         client.puts "+OK\r\n"
 
       when "COMMAND"
