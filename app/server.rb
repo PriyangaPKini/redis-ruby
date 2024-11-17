@@ -3,11 +3,12 @@ require "pry"
 
 module Redis
   class Server
-    attr_reader :port, :store
+    attr_reader :port, :store, :expiration
 
     def initialize(port)
       @port = port
       @store = {}
+      @expiration = {}
     end
 
     def start
@@ -62,22 +63,19 @@ module Redis
       case queries.first.upcase
       when "GET"
         key = queries[1]
-        if store.key?(key)
-          if store[key].key?(:expires_on)
-            expires_on = store[key][:expires_on]
-            puts(store[key], expires_on, Time.now, expires_on.class)
-            unless Time.now <= expires_on
-              client.puts "$-1\r\n"
-              return nil
-            end
-          end
 
-          value = store[key][:value]
-          client.puts "$#{value.length}\r\n#{value}\r\n"
-        else
+        unless store.key?(key)
           client.puts "$-1\r\n"
           return nil
         end
+
+        if expiration.key?(key) && Time.now > expiration[key]
+          client.puts "$-1\r\n"
+          return nil
+        end
+
+        value = store[key]
+        client.puts "$#{value.length}\r\n#{value}\r\n"
 
       when "SET"
         if queries[1..].length.odd?
@@ -87,9 +85,10 @@ module Redis
 
         key, value = queries[1..2]
         px, milliseconds = queries[3..4]
-        store[key] = {value: value}
+
+        store[key] = value
         if px&.upcase == "PX"
-          store[key]["expires_on"] = Time.now + (milliseconds.to_i / 1000.0)
+          expiration[key] = Time.now + (milliseconds.to_i / 1000.0)
         end
         client.puts "+OK\r\n"
 
