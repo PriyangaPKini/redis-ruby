@@ -13,8 +13,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Ruby
-      run: echo "RUBY_VERSION=$(cat ruby-version)" >> $GITHUB_ENV
-    - name: Run tests
-      run: bundle exec rspec test
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby Version
+        run: echo "RUBY_VERSION=$(cat ruby-version)" >> $GITHUB_ENV
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@55283cc23133118229fd3f97f9336ee23a179fcf # v1.146.0
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true # Automatically installs and caches gems
+
+      - name: Run tests
+        run: bundle exec rspec
