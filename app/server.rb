@@ -1,8 +1,11 @@
 require "socket"
 require "pry"
+require_relative 'encode'
 
 module Redis
   class Server
+    include Encode
+
     attr_reader :port, :store, :expiration
 
     def initialize(port)
@@ -28,7 +31,7 @@ module Redis
       query = []
       first_line = client.gets&.strip
       unless first_line&.start_with?("*")
-        client.puts "-ERR unknown command format\r\n"
+        client.puts encode_error("ERR unknown command format")
         return nil
       end
 
@@ -37,19 +40,19 @@ module Redis
       array_length.times do
         length_indicator = client.gets&.strip
         unless length_indicator&.start_with?("$")
-          client.puts "-ERR protocol error\r\n"
+          client.puts encode_error("ERR protocol error")
           return nil
         end
 
         element_length = length_indicator[1..].to_i
         if element_length <= 0
-          client.puts "-ERR protocol error\r\n"
+          client.puts encode_error("ERR protocol error")
           return nil
         end
 
         element = client.gets&.strip
         if element.nil? || element.length != element_length
-          client.puts "-ERR unknown command format\r\n"
+          client.puts encode_error("ERR unknown command format")
           return nil
         end
 
@@ -65,21 +68,21 @@ module Redis
         key = queries[1]
 
         unless store.key?(key)
-          client.puts "$-1\r\n"
+          client.puts encode_bulk(nil)
           return nil
         end
 
         if expiration.key?(key) && Time.now > expiration[key]
-          client.puts "$-1\r\n"
+          client.puts encode_bulk(nil)
           return nil
         end
 
         value = store[key]
-        client.puts "$#{value.length}\r\n#{value}\r\n"
+        client.puts encode_bulk(value)
 
       when "SET"
         if queries[1..].length.odd?
-          client.puts "-ERR wrong number of arguments for 'set' command\r\n"
+          client.puts encode_error("ERR wrong number of arguments for 'set' command")
           return nil
         end
 
@@ -90,23 +93,23 @@ module Redis
         if px&.upcase == "PX"
           expiration[key] = Time.now + (milliseconds.to_i / 1000.0)
         end
-        client.puts "+OK\r\n"
+        client.puts encode_simple("OK")
 
       when "COMMAND"
-        client.puts "+OK\r\n"
+        client.puts encode_simple("OK")
 
       when "ECHO"
         arg = queries[1]
         if arg
-          client.puts "$#{arg.length}\r\n#{arg}\r\n"
+          client.puts encode_bulk(arg)
         else
-          client.puts "-ERR wrong number of arguments for 'echo' command\r\n"
+          client.puts encode_error("ERR wrong number of arguments for 'echo' command")
         end
 
       when "PING"
-        client.puts("+PONG\r\n")
+        client.puts encode_simple("PONG")
       else
-        client.puts("-ERR unknown command\r\n")
+        client.puts encode_error("ERR unknown command")
       end
     end
 
