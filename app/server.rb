@@ -1,8 +1,8 @@
 require "socket"
+require "pry"
 
 module Redis
   class Server
-
     attr_reader :port, :store
 
     def initialize(port)
@@ -26,7 +26,7 @@ module Redis
     def parse_query(client)
       query = []
       first_line = client.gets&.strip
-      unless first_line&.start_with?('*')
+      unless first_line&.start_with?("*")
         client.puts "-ERR unknown command format\r\n"
         return nil
       end
@@ -35,8 +35,7 @@ module Redis
 
       array_length.times do
         length_indicator = client.gets&.strip
-        puts(length_indicator)
-        unless length_indicator&.start_with?('$')
+        unless length_indicator&.start_with?("$")
           client.puts "-ERR protocol error\r\n"
           return nil
         end
@@ -64,22 +63,35 @@ module Redis
       when "GET"
         key = queries[1]
         if store.key?(key)
-          value = store[key]
+          expires_on = store[key][:expires_on]
+          puts(store[key], expires_on, Time.now, expires_on.class)
+          unless Time.now <= expires_on
+            client.puts "$-1\r\n"
+          end
+          value = store[key][:value]
           client.puts "$#{value.length}\r\n#{value}\r\n"
         else
           client.puts "$-1\r\n"
+          nil
         end
+
       when "SET"
-        key, value = queries[1..]
-        if key.nil? or value.nil?
+        if queries[1..].length.odd?
           client.puts "-ERR wrong number of arguments for 'set' command\r\n"
-        else
-          store[key] = value
-          client.puts "+OK\r\n"
+          return nil
         end
+
+        key, value = queries[1..2]
+        px, milli_seconds = queries[3..4]
+        unless px.upcase == "PX"
+          client.puts("-ERR unknown command\r\n")
+        end
+        store[key] = {value: value, expires_on: Time.now + (milli_seconds.to_i / 1000.0)}
+        client.puts "+OK\r\n"
 
       when "COMMAND"
         client.puts "+OK\r\n"
+
       when "ECHO"
         arg = queries[1]
         if arg
@@ -87,6 +99,7 @@ module Redis
         else
           client.puts "-ERR wrong number of arguments for 'echo' command\r\n"
         end
+
       when "PING"
         client.puts("+PONG\r\n")
       else
@@ -95,7 +108,7 @@ module Redis
     end
 
     def handle_client(client)
-      while queries = parse_query(client)
+      while (queries = parse_query(client))
         execute(client, queries)
       end
     end
