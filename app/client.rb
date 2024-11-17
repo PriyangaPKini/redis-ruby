@@ -3,7 +3,6 @@ require "socket"
 # frozen_string_literal: true
 module Redis
   class Client
-
     attr_reader :port
 
     def initialize(port)
@@ -14,7 +13,7 @@ module Redis
       client = TCPSocket.new("127.0.0.1", port)
       puts "Connected to server on port #{port}"
       client.puts("*1\r\n$4\r\nPING\r\n")
-      while line = client.gets do
+      while (line = client.gets)
         puts line
         break if line.length
         client.puts(line)
