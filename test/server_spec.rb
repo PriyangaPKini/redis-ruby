@@ -4,7 +4,7 @@ require "rspec"
 require_relative "../app/server"
 
 RSpec.describe Redis::Server do
-  let(:port) { 6379 }
+  let(:port) { 6380 }
   let(:server) { described_class.new(port) }
   let(:client) { instance_double("TCPSocket") }
 
