@@ -5,7 +5,6 @@ require_relative 'core'
 
 module Redis
   class Server
-    include Encode
     include Core
 
     attr_reader :port, :store, :expiration
@@ -33,7 +32,7 @@ module Redis
       query = []
       first_line = client.gets&.strip
       unless first_line&.start_with?("*")
-        client.puts encode_error("ERR unknown command format")
+        client.puts Encode.encode_error("ERR unknown command format")
         return nil
       end
 
@@ -42,19 +41,19 @@ module Redis
       array_length.times do
         length_indicator = client.gets&.strip
         unless length_indicator&.start_with?("$")
-          client.puts encode_error("ERR protocol error")
+          client.puts Encode.encode_error("ERR protocol error")
           return nil
         end
 
         element_length = length_indicator[1..].to_i
         if element_length <= 0
-          client.puts encode_error("ERR protocol error")
+          client.puts Encode.encode_error("ERR protocol error")
           return nil
         end
 
         element = client.gets&.strip
         if element.nil? || element.length != element_length
-          client.puts encode_error("ERR unknown command format")
+          client.puts Encode.encode_error("ERR unknown command format")
           return nil
         end
 
@@ -82,7 +81,7 @@ module Redis
         ping
 
       else
-        encode_error("ERR unknown command")
+        Encode.encode_error("ERR unknown command")
       end
     end
 

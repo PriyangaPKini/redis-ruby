@@ -3,7 +3,6 @@ require 'rspec'
 require_relative '../app/encode'
 
 RSpec.describe Encode do
-  include Encode
   describe 'encode methods' do
     test_cases = [
       { method: :encode_simple, input: 'Hello', expected: "+Hello\r\n" },
@@ -20,7 +19,7 @@ RSpec.describe Encode do
 
     test_cases.each do |test_case|
       it "correctly encodes using #{test_case[:method]} with input #{test_case[:input].inspect}" do
-        result = send(test_case[:method], test_case[:input])
+        result = Encode.send(test_case[:method], test_case[:input])
         expect(result).to eq(test_case[:expected])
       end
     end
