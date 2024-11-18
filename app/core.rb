@@ -2,7 +2,7 @@ require_relative 'encode'
 
 module Core
   def command
-    Encode.Encode.encode_simple("OK")
+    Encode.encode_simple("OK")
   end
   def ping
     Encode.encode_simple("PONG")

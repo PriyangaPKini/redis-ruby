@@ -21,6 +21,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.11.0)
     rspec-support (3.11.0)
+    timecop (0.9.10)
 
 PLATFORMS
   aarch64-linux-musl
@@ -31,6 +32,7 @@ DEPENDENCIES
   bindata (~> 2.4)
   pry
   rspec
+  timecop (~> 0.9.4)
 
 BUNDLED WITH
    2.3.23

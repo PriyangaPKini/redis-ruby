@@ -8,7 +8,8 @@ source "https://rubygems.org"
 # Helps with declaratively parsing binary data.
 gem "bindata", "~> 2.4"
 
-group :development do
+group :test do
   gem "rspec"
   gem "pry"
+  gem 'timecop', '~> 0.9.4'
 end
