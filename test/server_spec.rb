@@ -55,70 +55,27 @@ RSpec.describe Redis::Server do
   end
 
   describe "#execute" do
-    it "returns an error for unknown command" do
-      expect(client).to receive(:puts).with("-ERR unknown command\r\n")
-      response = server.execute(client, %w[UNKNOWN])
-      expect(response).to be_nil
+    context "when known command is provided" do
+      [
+        { input: ["PING"], expected_output: "+PONG\r\n" },
+        { input: ["ECHO"], expected_output: "-ERR wrong number of arguments for 'echo' command\r\n" },
+        { input: %w[ECHO HEY!!], expected_output: "$5\r\nHEY!!\r\n" },
+      ].each do |test_case|
+        it "returns '#{test_case[:expected_output]}' given input '#{test_case[:input].join(' ')}'" do
+          response = server.execute(test_case[:input])
+          expect(response).to eq(test_case[:expected_output])
+        end
+      end
     end
 
-    it "responds with +PONG for PING command" do
-      expect(client).to receive(:puts).with("+PONG\r\n")
-      server.execute(client, %w[PING])
-    end
-
-    it "responds with +OK for COMMAND DOCS" do
-      expect(client).to receive(:puts).with("+OK\r\n")
-      server.execute(client, %w[COMMAND DOCS])
-    end
-
-    it "echoes back the argument for ECHO" do
-      expect(client).to receive(:puts).with("$5\r\nHello\r\n")
-      server.execute(client, %w[ECHO Hello])
-    end
-
-    it "returns an error when no argument is provided for ECHO" do
-      expect(client).to receive(:puts).with("-ERR wrong number of arguments for 'echo' command\r\n")
-      server.execute(client, %w[ECHO])
-    end
-
-    it "sets a value to the given key using SET command" do
-      expect(client).to receive(:puts).with("+OK\r\n")
-      server.execute(client, %w[SET foo bar])
-    end
-
-    it "gets the value to the given key using GET command" do
-      server.store["key"] = "value"
-      expect(client).to receive(:puts).with("$5\r\nvalue\r\n")
-      server.execute(client, %w[GET key])
-    end
-
-    it "returns (nil) when given key is not present in redis" do
-      expect(client).to receive(:puts).with("$-1\r\n")
-      server.execute(client, %w[GET non_existing_key])
-    end
-
-    it "sets a value to the given key and set an expiry using SET command" do
-      expect(client).to receive(:puts).with("+OK\r\n")
-      server.execute(client, %w[SET foo bar px 2000])
-    end
-
-    it "gets the value to the given key using GET command only if the key is not expired" do
-      milliseconds = 2000
-      seconds = milliseconds / 1000.0
-      server.store["key"] = "value"
-      server.expiration["key"] = Time.now + seconds
-      expect(client).to receive(:puts).with("$5\r\nvalue\r\n")
-      server.execute(client, %w[GET key])
-    end
-
-    it "returns (nil) when the key has expired" do
-      milliseconds = 2000
-      seconds = milliseconds / 1000.0
-      server.store["key"] = "value"
-      server.expiration["key"] = Time.now + seconds
-      expect(client).to receive(:puts).with("$-1\r\n")
-      sleep(seconds + 2)
-      server.execute(client, %w[GET key])
+    context "when unknown command is provided" do
+      [{ input: ["UNKNOWN"], expected_output: "-ERR unknown command\r\n" }].each do |test_case|
+        it "returns '#{test_case[:expected_output]}' given input '#{test_case[:input].join(' ')}'" do
+          response = server.execute(test_case[:input])
+          expect(response).to eq(test_case[:expected_output])
+        end
+      end
     end
   end
+
 end

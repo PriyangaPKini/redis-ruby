@@ -1,10 +1,12 @@
 require "socket"
 require "pry"
 require_relative 'encode'
+require_relative 'core'
 
 module Redis
   class Server
     include Encode
+    include Core
 
     attr_reader :port, :store, :expiration
 
@@ -62,60 +64,31 @@ module Redis
       query
     end
 
-    def execute(client, queries)
+    def execute(queries)
       case queries.first.upcase
       when "GET"
-        key = queries[1]
-
-        unless store.key?(key)
-          client.puts encode_bulk(nil)
-          return nil
-        end
-
-        if expiration.key?(key) && Time.now > expiration[key]
-          client.puts encode_bulk(nil)
-          return nil
-        end
-
-        value = store[key]
-        client.puts encode_bulk(value)
+        get(queries[1])
 
       when "SET"
-        if queries[1..].length.odd?
-          client.puts encode_error("ERR wrong number of arguments for 'set' command")
-          return nil
-        end
-
-        key, value = queries[1..2]
-        px, milliseconds = queries[3..4]
-
-        store[key] = value
-        if px&.upcase == "PX"
-          expiration[key] = Time.now + (milliseconds.to_i / 1000.0)
-        end
-        client.puts encode_simple("OK")
+        set(queries[1..])
 
       when "COMMAND"
-        client.puts encode_simple("OK")
+        command
 
       when "ECHO"
-        arg = queries[1]
-        if arg
-          client.puts encode_bulk(arg)
-        else
-          client.puts encode_error("ERR wrong number of arguments for 'echo' command")
-        end
+        echo(queries[1])
 
       when "PING"
-        client.puts encode_simple("PONG")
+        ping
+
       else
-        client.puts encode_error("ERR unknown command")
+        encode_error("ERR unknown command")
       end
     end
 
     def handle_client(client)
       while (queries = parse_query(client))
-        execute(client, queries)
+        client.puts execute(queries)
       end
     end
   end
