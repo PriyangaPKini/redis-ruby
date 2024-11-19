@@ -8,7 +8,7 @@ module Redis
   class Server
     include Redis::Core::Command
 
-    attr_reader :port, :host, :store, :expiration, :config
+    attr_reader :store, :expiration, :config
 
     def initialize(port:nil, host:nil, dir:nil, db_filename:nil)
       Redis.configure do |config|
@@ -18,15 +18,13 @@ module Redis
         config.db_filename = db_filename if db_filename
       end
       @config = Redis.configuration
-      @port = config.port
-      @host = config.host
       @store = {}
       @expiration = {}
     end
 
     def start
-      server = TCPServer.new(host, port)
-      puts "Redis server running on port #{port}..."
+      server = TCPServer.new(config.host, config.port)
+      puts "Redis server running on port #{config.port}..."
       loop do
         client = server.accept
         Thread.new(client) do |conn|
