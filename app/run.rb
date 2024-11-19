@@ -13,7 +13,11 @@ OptionParser.new do |opts|
   opts.on("--dbfilename DBFILE", "Specify the database file name") do |dbfile|
     options[:db_filename] = dbfile
   end
+
+  opts.on("-p port", "Specify the port number") do |port|
+    options[:port] = port
+  end
 end.parse!
 
-server = Redis::Server.new(port: 6380, dir: options[:dir], db_filename: options[:db_filename])
+server = Redis::Server.new(port: options[:port], dir: options[:dir], db_filename: options[:db_filename])
 server.start
