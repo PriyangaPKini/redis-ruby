@@ -20,10 +20,8 @@ module Redis
           return Encode.encode_error("ERR wrong number of arguments for 'set' command")
         end
 
-        key, value = args[1..2]
+        key, value, px, milliseconds = args
         store[key] = value
-
-        px, milliseconds = args[3..4]
         if px&.upcase == "PX"
           expiration[key] = Time.now + (milliseconds.to_i / 1000.0)
         end

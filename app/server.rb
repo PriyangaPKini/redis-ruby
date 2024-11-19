@@ -10,10 +10,12 @@ module Redis
 
     attr_reader :port, :host, :store, :expiration, :config
 
-    def initialize(port:nil, host:nil)
+    def initialize(port:nil, host:nil, dir:nil, db_filename:nil)
       Redis.configure do |config|
         config.port = port if port
         config.host = host if host
+        config.dir = dir if dir
+        config.db_filename = db_filename if db_filename
       end
       @config = Redis.configuration
       @port = config.port

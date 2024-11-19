@@ -6,7 +6,7 @@ require 'timecop'
 
 RSpec.describe Redis::Core::Command do
   let(:port) { 6381 }
-  let(:server) { Redis::Server.new(port) }
+  let(:server) { Redis::Server.new(port: port) }
 
   describe '#simple methods' do
     [
@@ -36,24 +36,28 @@ RSpec.describe Redis::Core::Command do
     [
       {
         method: :set,
-        input: %w[key value],
+        input: %w[foo bar],
         expected: "+OK\r\n"
       },
       {
         method: :set,
-        input: %w[key value PX 1000],
+        input: %w[pencil apsara PX 1000],
         expected: "+OK\r\n"
       },
       {
         method: :set,
-        input: %w[key value PX],
+        input: %w[Missing argument PX],
         expected: "-ERR wrong number of arguments for 'set' command\r\n"
       }
     ].each do |test_case|
       it "returns '#{test_case[:expected]}' given 'set #{test_case[:input]}'" do
         result = server.send(test_case[:method], test_case[:input])
+        puts(result)
         expect(result).to eq(test_case[:expected])
-      end
+        if test_case[:expected] == "+OK\r\n"
+          puts(test_case[:input][0])
+          expect(server.store).to include(test_case[:input][0])
+        end
     end
   end
 
@@ -97,6 +101,6 @@ RSpec.describe Redis::Core::Command do
       end
     end
   end
+  end
 
 end
-RSpec.configure
