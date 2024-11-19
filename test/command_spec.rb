@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 require 'rspec'
-require_relative '../app/core'
+require_relative '../app/command'
 require_relative '../app/server'
 require 'timecop'
 
-RSpec.describe Core do
+RSpec.describe Redis::Core::Command do
   let(:port) { 6381 }
   let(:server) { Redis::Server.new(port) }
 
@@ -99,3 +99,4 @@ RSpec.describe Core do
   end
 
 end
+RSpec.configure

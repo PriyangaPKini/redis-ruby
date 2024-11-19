@@ -1,22 +1,23 @@
 require "socket"
 require "pry"
 require_relative 'encode'
-require_relative 'core'
+require_relative 'command'
 
 module Redis
   class Server
-    include Core
+    include Redis::Core::Command
 
-    attr_reader :port, :store, :expiration
+    attr_reader :port, :host, :store, :expiration
 
-    def initialize(port)
+    def initialize(host: '127.0.0.1', port: 6379)
       @port = port
+      @host = host
       @store = {}
       @expiration = {}
     end
 
     def start
-      server = TCPServer.new("127.0.0.1", port)
+      server = TCPServer.new(host, port)
       puts "Redis server running on port #{port}..."
       loop do
         client = server.accept
