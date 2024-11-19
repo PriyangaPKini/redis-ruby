@@ -1,3 +1,5 @@
+require_relative 'rdb_parser'
+
 module Redis
   module Core
     module Command
@@ -61,6 +63,12 @@ module Redis
         else
           Encode.encode_error("ERR unknown command")
         end
+      end
+
+      def keys(pattern)
+        file_path = [config.dir, config.dbfilename].join('/')
+        keys = Redis::RdbParser.new(file_path).keys
+        Encode.encode_aggregate(keys)
       end
 
     end

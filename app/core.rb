@@ -17,7 +17,7 @@ module Redis
         @port = 6379
         @host = '127.0.0.1'
         @dbfilename = 'dump.rdb'
-        @dir = '/tmp/redis'
+        @dir = File.expand_path('..', __dir__)
       end
     end
   end

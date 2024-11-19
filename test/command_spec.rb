@@ -2,6 +2,7 @@
 require 'rspec'
 require_relative '../app/command'
 require_relative '../app/server'
+require_relative '../app/rdb_parser'
 require 'timecop'
 
 RSpec.describe Redis::Core::Command do
@@ -111,6 +112,25 @@ RSpec.describe Redis::Core::Command do
     ].each do |test_case|
       it "returns #{test_case[:expected]} given #{test_case[:input]}" do
         server = Redis::Server.new(port: port, dir: "/tmp/rdbfiles3814738508", dbfilename: "raspberry.rdb")
+        expect(server.send(test_case[:method], test_case[:input])).to eq(test_case[:expected])
+      end
+    end
+  end
+
+  describe "#keys" do
+    [
+      { method: :keys,
+        input: ["*"],
+        expected: "*1\r\n$3\r\nfoo\r\n",
+        setup: ->(server) { server.store['expired_key'] = 'value' }
+      },
+      { method: :keys,
+        input: ["*"],
+        expected: "*0\r\n"
+      }
+    ].each do |test_case|
+      it "returns #{test_case[:expected]} given #{test_case[:input]}" do
+        test_case[:setup]&.call(server)
         expect(server.send(test_case[:method], test_case[:input])).to eq(test_case[:expected])
       end
     end
