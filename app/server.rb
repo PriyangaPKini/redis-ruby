@@ -2,16 +2,22 @@ require "socket"
 require "pry"
 require_relative 'encode'
 require_relative 'command'
+require_relative 'core'
 
 module Redis
   class Server
     include Redis::Core::Command
 
-    attr_reader :port, :host, :store, :expiration
+    attr_reader :port, :host, :store, :expiration, :config
 
-    def initialize(host: '127.0.0.1', port: 6379)
-      @port = port
-      @host = host
+    def initialize(port:nil, host:nil)
+      Redis.configure do |config|
+        config.port = port if port
+        config.host = host if host
+      end
+      @config = Redis.configuration
+      @port = config.port
+      @host = config.host
       @store = {}
       @expiration = {}
     end
