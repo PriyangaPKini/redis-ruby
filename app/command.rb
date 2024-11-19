@@ -54,7 +54,6 @@ module Redis
       end
 
       def config_command(args)
-        puts("args: #{args}")
         case args.first.upcase
         when "GET"
           config_get(args[1..])
