@@ -19,5 +19,5 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-server = Redis::Server.new(port: options[:port], dir: options[:dir], db_filename: options[:db_filename])
+server = Redis::Server.new(port: 6380, dir: options[:dir], db_filename: options[:db_filename])
 server.start
