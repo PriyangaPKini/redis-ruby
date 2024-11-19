@@ -4,6 +4,7 @@ module Redis
       def command
         Encode.encode_simple("OK")
       end
+
       def ping
         Encode.encode_simple("PONG")
       end
@@ -43,12 +44,12 @@ module Redis
       end
 
       def config_get(args)
+        allowed_configs = %w[dir dbfilename]
         result = []
-        args.each do |arg|
-          value = config.send(:dir)
-          if config.send(arg)
-            result = result.push(arg, value)
-          end
+        args.filter { |arg| allowed_configs.include?(arg) }
+            .each do |arg|
+          value = config.send(arg)
+          result = result.push(arg, value)
         end
         Encode.encode_aggregate(result)
       end

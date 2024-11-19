@@ -22,7 +22,7 @@ module Encode
 
     def self.encode_aggregate(message)
       length = message.length
-      result = "$#{length}\r\n"
+      result = "*#{length}\r\n"
       message.each { |element| result += encode_bulk(element) }
       result
     end

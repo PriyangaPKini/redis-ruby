@@ -58,6 +58,7 @@ RSpec.describe Redis::Core::Command do
           puts(test_case[:input][0])
           expect(server.store).to include(test_case[:input][0])
         end
+      end
     end
   end
 
@@ -101,6 +102,17 @@ RSpec.describe Redis::Core::Command do
       end
     end
   end
-  end
 
+  describe "#config_set" do
+    [
+      { method: :config_get, input: ["dir"], expected: "*2\r\n$3\r\ndir\r\n$23\r\n/tmp/rdbfiles3814738508\r\n" },
+      { method: :config_get, input: ["dbfilename"], expected: "*2\r\n$10\r\ndbfilename\r\n$13\r\nraspberry.rdb\r\n" },
+      { method: :config_get, input: ["not_a_config"], expected: "*0\r\n" }
+    ].each do |test_case|
+      it "returns #{test_case[:expected]} given #{test_case[:input]}" do
+        server = Redis::Server.new(port: port, dir: "/tmp/rdbfiles3814738508", dbfilename: "raspberry.rdb")
+        expect(server.send(test_case[:method], test_case[:input])).to eq(test_case[:expected])
+      end
+    end
+  end
 end
