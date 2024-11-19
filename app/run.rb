@@ -4,7 +4,7 @@ require 'optparse'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: script.rb [options]"
+  opts.banner = "Usage: server.rb [options]"
 
   opts.on("--dir DIR", "Specify the directory name") do |dir|
     options[:dir] = dir
