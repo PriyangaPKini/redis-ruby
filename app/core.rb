@@ -15,7 +15,7 @@ module Redis
 
       def initialize
         @port = 6379
-        @host = '::1'
+        @host = '127.0.0.1'
         @db_filename = 'dump.rdb'
         @dir = '/tmp/redis'
       end
