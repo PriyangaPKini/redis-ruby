@@ -72,6 +72,8 @@ module Redis
 
     def execute(queries)
       case queries.first.upcase
+      when "CONFIG"
+        config_command(queries[2..])
       when "GET"
         get(queries[1])
 

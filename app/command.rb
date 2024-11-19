@@ -42,6 +42,26 @@ module Redis
         Encode.encode_bulk(value)
       end
 
+      def config_get(args)
+        result = []
+        args.each do |arg|
+          value = config.send(:dir)
+          if config.send(arg)
+            result = result.push(arg, value)
+          end
+        end
+        Encode.encode_aggregate(result)
+      end
+
+      def config_command(args)
+        case args.first.upcase
+        when "GET"
+          config_get(args[2..])
+        else
+          Encode.encode_error("ERR unknown command")
+        end
+      end
+
     end
   end
 end
